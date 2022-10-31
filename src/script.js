@@ -1,5 +1,6 @@
 import {
   Scene,
+  TextureLoader,
   PerspectiveCamera,
   WebGLRenderer,
   ACESFilmicToneMapping,
@@ -11,6 +12,8 @@ import {
   SphereGeometry,
   MeshPhysicalMaterial,
 } from "https://cdn.skypack.dev/three";
+
+import { OrbitControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
 
 const scene = new Scene();
 
@@ -26,6 +29,11 @@ renderer.outputEncoding = sRGBEncoding;
 renderer.physicallyCorrectLights = true;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = PCFSoftShadowMap;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.dumpingFactor = 0.5;
+controls.enableDamping = true;
 
 document.body.appendChild(renderer.domElement);
 
@@ -45,16 +53,32 @@ sunLight.shadow.camera.top = 10;
 sunLight.shadow.camera.bottom = -10;
 scene.add(sunLight);
 
-let sphere = new Mesh(
-  new SphereGeometry(10, 70, 70),
-  new MeshPhysicalMaterial({})
-);
-
-sphere.receiveShadow = true;
-scene.add(sphere);
-
 (async () => {
+  let textures = {
+    bump: await new TextureLoader().loadAsync("/assets/earthbump.jpg"),
+    map: await new TextureLoader().loadAsync("/assets/earthmap.jpg"),
+    spec: await new TextureLoader().loadAsync("/assets/earthspec.jpg"),
+  };
+
+  let sphere = new Mesh(
+    new SphereGeometry(10, 70, 70),
+    new MeshPhysicalMaterial({
+      map: textures.map,
+      roughnessMap: textures.spec,
+      bumpMap: textures.bump,
+      bumpScale: 0.5,
+      sheen: 1,
+      sheenRoughness: 0.75,
+      sheenColor: new Color("#ff8a00").convertSRGBToLinear(),
+      clearcoat: 0.5,
+    })
+  );
+
+  sphere.receiveShadow = true;
+  scene.add(sphere);
+
   renderer.setAnimationLoop(() => {
+    controls.update();
     renderer.render(scene, camera);
   });
 })();
