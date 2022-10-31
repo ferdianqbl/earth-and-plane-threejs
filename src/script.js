@@ -16,6 +16,7 @@ import {
   Group,
   Vector3,
   Clock,
+  PlaneGeometry,
 } from "https://cdn.skypack.dev/three@0.137";
 
 import { OrbitControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
@@ -79,25 +80,25 @@ scene.add(sunLight);
 
   let planesData = [
     makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
-    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    // makePlane(plane, textures.planeTrailMask, envMap, scene),
   ];
 
   let sphere = new Mesh(
@@ -133,6 +134,7 @@ scene.add(sunLight);
       plane.updateMatrixWorld();
 
       planeData.rot += delta * Math.random() * 3.5;
+      // planeData.rot += 0;
       plane.rotateOnAxis(planeData.randomAxis, planeData.randomAxisRot); // random axis
       plane.rotateOnAxis(new Vector3(0, 1, 0), planeData.rot); // y-axis rotation
       plane.rotateOnAxis(new Vector3(0, 0, 1), planeData.rad); // this decides the radius
@@ -164,8 +166,29 @@ const makePlane = (planeMesh, trailTexture, envMap, scene) => {
     }
   });
 
+  let trail = new Mesh(
+    new PlaneGeometry(1, 2),
+    new MeshPhysicalMaterial({
+      envMap,
+      envMapIntensity: 1,
+
+      color: new Color(1.0, 0.0, 0.5),
+      roughness: 0.4,
+      metalness: 0,
+      transmission: 1,
+
+      transparent: true,
+      opacity: 1,
+      alphaMap: trailTexture,
+    })
+  );
+
+  trail.rotateX(Math.PI);
+  trail.translateY(1.1);
+
   let group = new Group();
   group.add(plane);
+  group.add(trail);
 
   scene.add(group);
 
@@ -175,6 +198,7 @@ const makePlane = (planeMesh, trailTexture, envMap, scene) => {
     rad: Math.random() * Math.PI * 0.45 + 0.05,
     yOff: 10.5 + Math.random() * 1.0,
     randomAxis: new Vector3(nr(), nr(), nr()).normalize(),
+    // randomAxisRot: 0,
     randomAxisRot: Math.random() * Math.PI * 2,
   };
 };
