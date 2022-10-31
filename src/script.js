@@ -16,6 +16,7 @@ import {
   PMREMGenerator,
   Group,
   Vector3,
+  Vector2,
   Clock,
   PlaneGeometry,
   RingGeometry,
@@ -30,15 +31,15 @@ const scene = new Scene();
 const camera = new PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 1000);
 camera.position.set(0, 15, 50);
 
-const ringsScene = new Scene();
+const ringScene = new Scene();
 
-const ringsCamera = new PerspectiveCamera(
+const ringCamera = new PerspectiveCamera(
   45,
   innerWidth / innerHeight,
   0.1,
   1000
 );
-ringsCamera.position.set(0, 0, 50);
+ringCamera.position.set(0, 0, 50);
 
 const renderer = new WebGLRenderer({ antialias: true, alpha: true });
 
@@ -72,6 +73,16 @@ sunLight.shadow.camera.top = 10;
 sunLight.shadow.camera.bottom = -10;
 scene.add(sunLight);
 
+let mousePos = new Vector2(0, 0);
+
+window.addEventListener("mousemove", (e) => {
+  let x = e.clientX - innerWidth * 0.5;
+  let y = e.clientY - innerWidth * 0.5;
+
+  mousePos.x = x * 0.0003;
+  mousePos.y = y * 0.0003;
+});
+
 (async () => {
   let pmrem = new PMREMGenerator(renderer);
   let envmapTexture = await new RGBELoader()
@@ -79,7 +90,7 @@ scene.add(sunLight);
     .loadAsync("/assets/old_room_2k.hdr");
   let envMap = pmrem.fromEquirectangular(envmapTexture).texture;
 
-  const rings1 = new Mesh(
+  const ring1 = new Mesh(
     new RingGeometry(15, 13.5, 80, 1, 0),
     new MeshPhysicalMaterial({
       color: new Color("#FFCB8E").convertSRGBToLinear().multiplyScalar(200),
@@ -92,29 +103,29 @@ scene.add(sunLight);
     })
   );
 
-  const rings2 = new Mesh(
+  const ring2 = new Mesh(
     new RingGeometry(16.5, 15.75, 80, 1, 0),
     new MeshPhysicalMaterial({
       color: new Color("#FFCB8E").convertSRGBToLinear(),
       side: DoubleSide,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.4,
     })
   );
 
-  const rings3 = new Mesh(
+  const ring3 = new Mesh(
     new RingGeometry(18, 17.75, 80),
     new MeshPhysicalMaterial({
       color: new Color("#FFCB8E").convertSRGBToLinear().multiplyScalar(50),
       side: DoubleSide,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.4,
     })
   );
 
-  ringsScene.add(rings1);
-  ringsScene.add(rings2);
-  ringsScene.add(rings3);
+  ringScene.add(ring1);
+  ringScene.add(ring2);
+  ringScene.add(ring3);
 
   let textures = {
     bump: await new TextureLoader().loadAsync("/assets/earthbump.jpg"),
@@ -193,8 +204,17 @@ scene.add(sunLight);
     controls.update();
     renderer.render(scene, camera);
 
+    ring1.rotation.x = ring1.rotation.x * 0.95 + mousePos.y * 0.05 * 1.2;
+    ring1.rotation.y = ring1.rotation.y * 0.95 + mousePos.x * 0.05 * 1.2;
+
+    ring2.rotation.x = ring2.rotation.x * 0.95 + mousePos.y * 0.05 * 0.375;
+    ring2.rotation.y = ring2.rotation.y * 0.95 + mousePos.x * 0.05 * 0.375;
+
+    ring3.rotation.x = ring3.rotation.x * 0.95 - mousePos.y * 0.05 * 0.275;
+    ring3.rotation.y = ring3.rotation.y * 0.95 - mousePos.x * 0.05 * 0.275;
+
     renderer.autoClear = false;
-    renderer.render(ringsScene, ringsCamera);
+    renderer.render(ringScene, ringCamera);
     renderer.autoClear = true;
   });
 })();
