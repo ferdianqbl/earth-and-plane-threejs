@@ -132,7 +132,7 @@ scene.add(sunLight);
       plane.rotation.set(0, 0, 0);
       plane.updateMatrixWorld();
 
-      planeData.rot += delta * 2;
+      planeData.rot += delta * Math.random() * 3.5;
       plane.rotateOnAxis(planeData.randomAxis, planeData.randomAxisRot); // random axis
       plane.rotateOnAxis(new Vector3(0, 1, 0), planeData.rot); // y-axis rotation
       plane.rotateOnAxis(new Vector3(0, 0, 1), planeData.rad); // this decides the radius
@@ -159,8 +159,8 @@ const makePlane = (planeMesh, trailTexture, envMap, scene) => {
   plane.traverse((object) => {
     if (object instanceof Mesh) {
       object.material.envMap = envMap;
-      object.material.castShadow = true;
-      object.material.receiveShadow = true;
+      object.castShadow = true;
+      object.receiveShadow = true;
     }
   });
 
