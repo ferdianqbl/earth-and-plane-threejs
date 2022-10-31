@@ -15,6 +15,7 @@ import {
   PMREMGenerator,
   Group,
   Vector3,
+  Clock,
 } from "https://cdn.skypack.dev/three@0.137";
 
 import { OrbitControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
@@ -76,7 +77,28 @@ scene.add(sunLight);
   let plane = (await new GLTFLoader().loadAsync("/assets/plane/scene.glb"))
     .scene.children[0];
 
-  let planesData = [makePlane(plane, textures.planeTrailMask, envMap, scene)];
+  let planesData = [
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+  ];
 
   let sphere = new Mesh(
     new SphereGeometry(10, 70, 70),
@@ -98,7 +120,11 @@ scene.add(sunLight);
   sphere.receiveShadow = true;
   scene.add(sphere);
 
+  let clock = new Clock();
+
   renderer.setAnimationLoop(() => {
+    let delta = clock.getDelta();
+
     planesData.forEach((planeData) => {
       let plane = planeData.group;
 
@@ -106,6 +132,10 @@ scene.add(sunLight);
       plane.rotation.set(0, 0, 0);
       plane.updateMatrixWorld();
 
+      planeData.rot += delta * 2;
+      plane.rotateOnAxis(planeData.randomAxis, planeData.randomAxisRot); // random axis
+      plane.rotateOnAxis(new Vector3(0, 1, 0), planeData.rot); // y-axis rotation
+      plane.rotateOnAxis(new Vector3(0, 0, 1), planeData.rad); // this decides the radius
       plane.translateY(planeData.yOff);
       plane.rotateOnAxis(new Vector3(1, 0, 0), +Math.PI * 0.5);
     });
@@ -115,9 +145,13 @@ scene.add(sunLight);
   });
 })();
 
+function nr() {
+  return Math.random() * 2 - 1;
+}
+
 const makePlane = (planeMesh, trailTexture, envMap, scene) => {
   let plane = planeMesh.clone();
-  plane.scale.set(0.003, 0.003, 0.003);
+  plane.scale.set(0.001, 0.001, 0.001);
   plane.position.set(0, 0, 0);
   plane.rotation.set(0, 0, 0);
   plane.updateMatrixWorld();
@@ -137,6 +171,10 @@ const makePlane = (planeMesh, trailTexture, envMap, scene) => {
 
   return {
     group,
+    rot: Math.random() * Math.PI * 2.0,
+    rad: Math.random() * Math.PI * 0.45 + 0.05,
     yOff: 10.5 + Math.random() * 1.0,
+    randomAxis: new Vector3(nr(), nr(), nr()).normalize(),
+    randomAxisRot: Math.random() * Math.PI * 2,
   };
 };
