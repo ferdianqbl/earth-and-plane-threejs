@@ -11,9 +11,12 @@ import {
   Mesh,
   SphereGeometry,
   MeshPhysicalMaterial,
-} from "https://cdn.skypack.dev/three";
+  FloatType,
+  PMREMGenerator,
+} from "https://cdn.skypack.dev/three@0.137";
 
 import { OrbitControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
+import { RGBELoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/RGBELoader";
 
 const scene = new Scene();
 
@@ -54,6 +57,12 @@ sunLight.shadow.camera.bottom = -10;
 scene.add(sunLight);
 
 (async () => {
+  let pmrem = new PMREMGenerator(renderer);
+  let envmapTexture = await new RGBELoader()
+    .setDataType(FloatType)
+    .loadAsync("/assets/old_room_2k.hdr");
+  let envMap = pmrem.fromEquirectangular(envmapTexture).texture;
+
   let textures = {
     bump: await new TextureLoader().loadAsync("/assets/earthbump.jpg"),
     map: await new TextureLoader().loadAsync("/assets/earthmap.jpg"),
@@ -67,6 +76,8 @@ scene.add(sunLight);
       roughnessMap: textures.spec,
       bumpMap: textures.bump,
       bumpScale: 0.5,
+      envMap,
+      envMapIntensity: 0.4,
       sheen: 1,
       sheenRoughness: 0.75,
       sheenColor: new Color("#ff8a00").convertSRGBToLinear(),
@@ -74,6 +85,7 @@ scene.add(sunLight);
     })
   );
 
+  sphere.rotation.y += Math.PI * 1.25;
   sphere.receiveShadow = true;
   scene.add(sphere);
 
