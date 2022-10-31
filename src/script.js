@@ -13,10 +13,13 @@ import {
   MeshPhysicalMaterial,
   FloatType,
   PMREMGenerator,
+  Group,
+  Vector3,
 } from "https://cdn.skypack.dev/three@0.137";
 
 import { OrbitControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
 import { RGBELoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/RGBELoader";
+import { GLTFLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/GLTFLoader";
 
 const scene = new Scene();
 
@@ -67,7 +70,13 @@ scene.add(sunLight);
     bump: await new TextureLoader().loadAsync("/assets/earthbump.jpg"),
     map: await new TextureLoader().loadAsync("/assets/earthmap.jpg"),
     spec: await new TextureLoader().loadAsync("/assets/earthspec.jpg"),
+    planeTrailMask: await new TextureLoader().loadAsync("/assets/mask.png"),
   };
+
+  let plane = (await new GLTFLoader().loadAsync("/assets/plane/scene.glb"))
+    .scene.children[0];
+
+  let planesData = [makePlane(plane, textures.planeTrailMask, envMap, scene)];
 
   let sphere = new Mesh(
     new SphereGeometry(10, 70, 70),
@@ -90,7 +99,44 @@ scene.add(sunLight);
   scene.add(sphere);
 
   renderer.setAnimationLoop(() => {
+    planesData.forEach((planeData) => {
+      let plane = planeData.group;
+
+      plane.position.set(0, 0, 0);
+      plane.rotation.set(0, 0, 0);
+      plane.updateMatrixWorld();
+
+      plane.translateY(planeData.yOff);
+      plane.rotateOnAxis(new Vector3(1, 0, 0), +Math.PI * 0.5);
+    });
+
     controls.update();
     renderer.render(scene, camera);
   });
 })();
+
+const makePlane = (planeMesh, trailTexture, envMap, scene) => {
+  let plane = planeMesh.clone();
+  plane.scale.set(0.003, 0.003, 0.003);
+  plane.position.set(0, 0, 0);
+  plane.rotation.set(0, 0, 0);
+  plane.updateMatrixWorld();
+
+  plane.traverse((object) => {
+    if (object instanceof Mesh) {
+      object.material.envMap = envMap;
+      object.material.castShadow = true;
+      object.material.receiveShadow = true;
+    }
+  });
+
+  let group = new Group();
+  group.add(plane);
+
+  scene.add(group);
+
+  return {
+    group,
+    yOff: 10.5 + Math.random() * 1.0,
+  };
+};
