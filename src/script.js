@@ -1,5 +1,6 @@
 import {
   Scene,
+  DoubleSide,
   TextureLoader,
   PerspectiveCamera,
   WebGLRenderer,
@@ -17,6 +18,7 @@ import {
   Vector3,
   Clock,
   PlaneGeometry,
+  RingGeometry,
 } from "https://cdn.skypack.dev/three@0.137";
 
 import { OrbitControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
@@ -26,8 +28,17 @@ import { GLTFLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/G
 const scene = new Scene();
 
 const camera = new PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 1000);
-
 camera.position.set(0, 15, 50);
+
+const ringsScene = new Scene();
+
+const ringsCamera = new PerspectiveCamera(
+  45,
+  innerWidth / innerHeight,
+  0.1,
+  1000
+);
+ringsCamera.position.set(0, 0, 50);
 
 const renderer = new WebGLRenderer({ antialias: true, alpha: true });
 
@@ -68,6 +79,43 @@ scene.add(sunLight);
     .loadAsync("/assets/old_room_2k.hdr");
   let envMap = pmrem.fromEquirectangular(envmapTexture).texture;
 
+  const rings1 = new Mesh(
+    new RingGeometry(15, 13.5, 80, 1, 0),
+    new MeshPhysicalMaterial({
+      color: new Color("#FFCB8E").convertSRGBToLinear().multiplyScalar(200),
+      roughness: 0.5,
+      envMap,
+      envMapIntensity: 1.8,
+      side: DoubleSide,
+      transparent: true,
+      opacity: 0.35,
+    })
+  );
+
+  const rings2 = new Mesh(
+    new RingGeometry(16.5, 15.75, 80, 1, 0),
+    new MeshPhysicalMaterial({
+      color: new Color("#FFCB8E").convertSRGBToLinear(),
+      side: DoubleSide,
+      transparent: true,
+      opacity: 0.5,
+    })
+  );
+
+  const rings3 = new Mesh(
+    new RingGeometry(18, 17.75, 80),
+    new MeshPhysicalMaterial({
+      color: new Color("#FFCB8E").convertSRGBToLinear().multiplyScalar(50),
+      side: DoubleSide,
+      transparent: true,
+      opacity: 0.5,
+    })
+  );
+
+  ringsScene.add(rings1);
+  ringsScene.add(rings2);
+  ringsScene.add(rings3);
+
   let textures = {
     bump: await new TextureLoader().loadAsync("/assets/earthbump.jpg"),
     map: await new TextureLoader().loadAsync("/assets/earthmap.jpg"),
@@ -80,25 +128,25 @@ scene.add(sunLight);
 
   let planesData = [
     makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
-    // makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
+    makePlane(plane, textures.planeTrailMask, envMap, scene),
   ];
 
   let sphere = new Mesh(
@@ -144,6 +192,10 @@ scene.add(sunLight);
 
     controls.update();
     renderer.render(scene, camera);
+
+    renderer.autoClear = false;
+    renderer.render(ringsScene, ringsCamera);
+    renderer.autoClear = true;
   });
 })();
 
@@ -172,7 +224,7 @@ const makePlane = (planeMesh, trailTexture, envMap, scene) => {
       envMap,
       envMapIntensity: 1,
 
-      color: new Color(1.0, 0.0, 0.5),
+      // color: new Color(1.0, 0.0, 0.5),
       roughness: 0.4,
       metalness: 0,
       transmission: 1,
