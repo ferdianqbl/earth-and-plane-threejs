@@ -25,6 +25,10 @@ import {
 import { OrbitControls } from "https://cdn.skypack.dev/three-stdlib@2.8.5/controls/OrbitControls";
 import { RGBELoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/RGBELoader";
 import { GLTFLoader } from "https://cdn.skypack.dev/three-stdlib@2.8.5/loaders/GLTFLoader";
+import anime from "https://cdn.skypack.dev/animejs@3.2.1";
+
+const sunBg = document.querySelector(".sun-bg");
+const moonBg = document.querySelector(".moon-bg");
 
 const scene = new Scene();
 
@@ -72,6 +76,22 @@ sunLight.shadow.camera.right = 10;
 sunLight.shadow.camera.top = 10;
 sunLight.shadow.camera.bottom = -10;
 scene.add(sunLight);
+
+const moonLight = new DirectionalLight(
+  new Color("#77CCFF").convertSRGBToLinear(),
+  0
+);
+moonLight.position.set(-10, 20, 10);
+moonLight.castShadow = true;
+moonLight.shadow.mapSize.width = 512;
+moonLight.shadow.mapSize.height = 512;
+moonLight.shadow.camera.near = 0.5;
+moonLight.shadow.camera.far = 100;
+moonLight.shadow.camera.left = -10;
+moonLight.shadow.camera.right = 10;
+moonLight.shadow.camera.top = 10;
+moonLight.shadow.camera.bottom = -10;
+scene.add(moonLight);
 
 let mousePos = new Vector2(0, 0);
 
@@ -122,6 +142,15 @@ window.addEventListener("mousemove", (e) => {
       opacity: 0.4,
     })
   );
+
+  ring1.sunOpacity = 0.35;
+  ring1.moonOpacity = 0.03;
+
+  ring2.sunOpacity = 0.35;
+  ring2.moonOpacity = 0.1;
+
+  ring3.sunOpacity = 0.35;
+  ring3.moonOpacity = 0.03;
 
   ringScene.add(ring1);
   ringScene.add(ring2);
@@ -176,11 +205,59 @@ window.addEventListener("mousemove", (e) => {
     })
   );
 
+  sphere.sunEnvIntensity = 0.4;
+  sphere.moonEnvIntensity = 0.1;
   sphere.rotation.y += Math.PI * 1.25;
   sphere.receiveShadow = true;
   scene.add(sphere);
 
   let clock = new Clock();
+
+  let daytime = true;
+  let animating = false;
+
+  window.addEventListener("keypress", (e) => {
+    if (e.key != "j") return;
+    if (animating) return;
+
+    let anim;
+    if (!daytime) anim = [1, 0];
+    else if (daytime) anim = [0, 1];
+    else return;
+
+    let obj = { t: 0 };
+    anime({
+      targets: obj,
+      t: anim,
+      complete: () => {
+        animating = false;
+        daytime = !daytime;
+      },
+      update: () => {
+        sunLight.intensity = 3.5 * (1 - obj.t);
+        moonLight.intensity = 3.5 * obj.t;
+
+        sunLight.position.setY(20 * (1 - obj.t));
+        moonLight.position.setY(20 * obj.t);
+
+        sphere.material.sheen = 1 - obj.t;
+
+        sunBg.style.opacity = 1 - obj.t;
+        moonBg.style.opacity = obj.t;
+
+        scene.children.forEach((child) => {
+          child.traverse((object) => {
+            if (object instanceof Mesh && object.material.envMap)
+              object.material.envMapIntensity =
+                object.sunEnvIntensity * (1 - obj.t) +
+                object.moonEnvIntensity * obj.t;
+          });
+        });
+      },
+      easing: "easeInOutSine",
+      duration: 500,
+    });
+  });
 
   renderer.setAnimationLoop(() => {
     let delta = clock.getDelta();
@@ -233,6 +310,8 @@ const makePlane = (planeMesh, trailTexture, envMap, scene) => {
   plane.traverse((object) => {
     if (object instanceof Mesh) {
       object.material.envMap = envMap;
+      object.sunEnvIntensity = 1;
+      object.moonEnvIntensity = 0.3;
       object.castShadow = true;
       object.receiveShadow = true;
     }
@@ -255,6 +334,8 @@ const makePlane = (planeMesh, trailTexture, envMap, scene) => {
     })
   );
 
+  trail.sunEnvIntensity = 3;
+  trail.moonEnvIntensity = 0.7;
   trail.rotateX(Math.PI);
   trail.translateY(1.1);
 
